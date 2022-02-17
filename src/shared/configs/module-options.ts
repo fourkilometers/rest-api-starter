@@ -1,8 +1,7 @@
-import { ConfigModuleOptions } from '@nestjs/config/dist/interfaces';
 import * as Joi from 'joi';
 import configuration from './configuration';
 
-export const configModuleOptions: ConfigModuleOptions = {
+export default {
   envFilePath: '.env',
   load: [configuration],
   validationSchema: Joi.object({
