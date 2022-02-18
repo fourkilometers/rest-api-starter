@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { hash } from 'bcrypt';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { compare, hash } from 'bcrypt';
 import { plainToClass } from 'class-transformer';
 import { AppLogger } from 'src/shared/logger/logger.service';
 import { RequestContext } from 'src/shared/request-context/request-context.dto';
@@ -44,6 +44,25 @@ export class UserService {
 
     this.logger.log(ctx, `calling ${UserRepository.name}.getById`);
     const user = await this.repository.getById(id);
+
+    return plainToClass(UserOutput, user, {
+      excludeExtraneousValues: true,
+    });
+  }
+
+  async validateUsernamePassword(
+    ctx: RequestContext,
+    username: string,
+    pass: string,
+  ): Promise<UserOutput> {
+    this.logger.log(ctx, `${this.validateUsernamePassword.name} was called`);
+
+    this.logger.log(ctx, `calling ${UserRepository.name}.findOne`);
+    const user = await this.repository.findOne({ username });
+    if (!user) throw new UnauthorizedException();
+
+    const match = await compare(pass, user.password);
+    if (!match) throw new UnauthorizedException();
 
     return plainToClass(UserOutput, user, {
       excludeExtraneousValues: true,

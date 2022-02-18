@@ -18,6 +18,7 @@ import { AppLogger } from 'src/shared/logger/logger.service';
 import { ReqContext } from 'src/shared/request-context/req-context.decorator';
 import { RequestContext } from 'src/shared/request-context/request-context.dto';
 import { AuthService } from './auth.service';
+import { LoginInput } from './dtos/auth-login-input.dto';
 import { RegisterInput } from './dtos/auth-register-input.dto';
 import { RegisterOutput } from './dtos/auth-register-output.dto';
 import { AuthTokenOutput } from './dtos/auth-token-output.dto';
@@ -43,7 +44,11 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @UseGuards(LocalAuthGuard)
   @UseInterceptors(ClassSerializerInterceptor)
-  login(@ReqContext() ctx: RequestContext): BaseApiResponse<AuthTokenOutput> {
+  login(
+    @ReqContext() ctx: RequestContext,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    @Body() credential: LoginInput,
+  ): BaseApiResponse<AuthTokenOutput> {
     this.logger.log(ctx, `${this.login.name} was called`);
 
     const authToken = this.authService.login(ctx);
