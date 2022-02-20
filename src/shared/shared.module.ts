@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { APP_FILTER, APP_INTERCEPTOR } from '@nestjs/core';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import configModuleOptions from './configs/module-options';
@@ -10,15 +10,23 @@ import { AppLoggerModule } from './logger/logger.module';
 @Module({
   imports: [
     ConfigModule.forRoot(configModuleOptions),
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: '10.208.68.8',
-      port: 2195,
-      username: 'dev_fe_debug',
-      password: '1eb032e54333cdc2',
-      database: 'dev_fe_debug',
-      entities: [__dirname + '/../**/*.entity{.ts,.js}'],
-      synchronize: false,
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: async (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get<string>('database.host'),
+        port: configService.get<number | undefined>('database.port'),
+        database: configService.get<string>('database.name'),
+        username: configService.get<string>('database.user'),
+        password: configService.get<string>('database.pass'),
+        entities: [__dirname + '/../**/*.entity{.ts,.js}'],
+        // Timezone configured on the MySQL server.
+        // This is used to typecast server date/time values to JavaScript Date object and vice versa.
+        timezone: 'Z',
+        synchronize: false,
+        debug: configService.get<string>('env') === 'development',
+      }),
     }),
     AppLoggerModule,
   ],

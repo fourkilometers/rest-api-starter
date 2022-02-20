@@ -5,6 +5,7 @@ import { plainToClass } from 'class-transformer';
 import { AppLogger } from 'src/shared/logger/logger.service';
 import { RequestContext } from 'src/shared/request-context/request-context.dto';
 import { createRequestContext } from 'src/shared/request-context/util';
+import { UserAuthRequest } from 'src/type/UserAuthRequestInterface';
 import { UserOutput } from 'src/user/dtos/user-output.dto';
 import { UserService } from 'src/user/user.service';
 import { ROLE } from './constants/role.constant';
@@ -47,6 +48,7 @@ export class AuthService {
     user: UserAccessTokenClaims | UserOutput,
   ): AuthTokenOutput {
     this.logger.log(ctx, `${this.getAuthToken.name} was called`);
+    console.log('configService:', this.configService);
 
     const subject = { sub: user.id };
     const payload = {
@@ -54,13 +56,18 @@ export class AuthService {
       sub: user.id,
       roles: user.roles,
     };
+    const jwt = this.configService.get('jwt');
+    console.log('expiresIn type:', typeof jwt.refreshTokenExpiresInSec);
+
     const authToken = {
       refreshToken: this.jwtService.sign(subject, {
-        expiresIn: this.configService.get('jwt.refreshTokenExpiresInsec'),
+        expiresIn: jwt.refreshTokenExpiresInsec,
       }),
       accessToken: this.jwtService.sign(
         { ...payload, ...subject },
-        { expiresIn: this.configService.get('jwt.accessTokenExpiresInSec') },
+        {
+          expiresIn: jwt.accessTokenExpiresInSec,
+        },
       ),
     };
     return plainToClass(AuthTokenOutput, authToken, {
@@ -69,7 +76,7 @@ export class AuthService {
   }
 
   async validate(
-    request: Request,
+    request: UserAuthRequest,
     username: string,
     password: string,
   ): Promise<UserAccessTokenClaims> {

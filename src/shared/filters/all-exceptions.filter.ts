@@ -6,8 +6,8 @@ import {
   HttpStatus,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Request, Response } from 'express';
-
+import { Response } from 'express';
+import { UserAuthRequest } from 'src/type/UserAuthRequestInterface';
 import { REQUEST_ID_TOKEN_HEADER } from '../constants';
 import { BaseApiException } from '../exceptions/base-api.exception';
 import { AppLogger } from '../logger/logger.service';
@@ -25,7 +25,7 @@ export class AllExceptionsFilter<T> implements ExceptionFilter {
 
   catch(exception: T, host: ArgumentsHost): any {
     const ctx = host.switchToHttp();
-    const req: Request = ctx.getRequest<Request>();
+    const req = ctx.getRequest<UserAuthRequest>();
     const res: Response = ctx.getResponse<Response>();
 
     const path = req.url;
